@@ -31,7 +31,6 @@ import RegisterPage    from './pages/RegisterPage'
 function ProtectedRoute({ children, requiredRole }) {
   const [session, setSession] = useState(undefined)
   const [profile, setProfile] = useState(null)
-  const [profileLoading, setProfileLoading] = useState(true)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,33 +41,19 @@ function ProtectedRoute({ children, requiredRole }) {
           .select('role')
           .eq('id', session.user.id)
           .single()
-          .then(({ data }) => {
-            setProfile(data)
-            setProfileLoading(false)
-          })
-      } else {
-        setProfileLoading(false)
+          .then(({ data }) => setProfile(data))
       }
     })
   }, [])
 
-  // Still loading — show spinner, don't redirect yet
-  if (session === undefined || profileLoading) return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 border-[#6C3FC5] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm text-gray-400">Loading...</p>
-      </div>
+  if (session === undefined) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-6 h-6 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
-  // No session — go to login
   if (!session) return <Navigate to="/login" replace />
-
-  // Has session but wrong role — go home
-  if (requiredRole && profile && profile.role !== requiredRole) {
-    return <Navigate to="/" replace />
-  }
+  if (requiredRole && profile?.role !== requiredRole) return <Navigate to="/" replace />
 
   return children
 }
