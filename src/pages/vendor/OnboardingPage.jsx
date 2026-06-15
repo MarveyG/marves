@@ -30,19 +30,22 @@ function slugify(text) {
     .trim()
 }
 
-function StepTracker({ current }) {
+function StepTracker({ current, setStep }) {
   return (
     <div className="flex items-center justify-center mb-8">
       {STEPS.map((step, idx) => (
         <div key={step.id} className="flex items-center">
           <div className="flex flex-col items-center">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all
-              ${current > step.id
-                ? 'bg-[#F0EBFF] text-[#6C3FC5] border-2 border-[#6C3FC5]'
-                : current === step.id
-                  ? 'bg-[#6C3FC5] text-white'
-                  : 'bg-white border-2 border-gray-200 text-gray-400'
-              }`}>
+            <div
+              onClick={() => current > step.id && setStep(step.id)}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all
+                ${current > step.id
+                  ? 'bg-[#F0EBFF] text-[#6C3FC5] border-2 border-[#6C3FC5] cursor-pointer hover:bg-[#6C3FC5] hover:text-white'
+                  : current === step.id
+                    ? 'bg-[#6C3FC5] text-white cursor-default'
+                    : 'bg-white border-2 border-gray-200 text-gray-400 cursor-default'
+                }`}
+            >
               {current > step.id ? '✓' : step.id}
             </div>
             <span className={`text-xs mt-1 font-medium hidden sm:block
@@ -59,7 +62,6 @@ function StepTracker({ current }) {
     </div>
   )
 }
-
 function Field({ label, optional, helper, children }) {
   return (
     <div>
@@ -229,34 +231,61 @@ function Step2({ data, onChange }) {
 }
 
 // ── STEP 3 ─────────────────────────────────────────────────
-function Step3({ data, onChange }) {
+function Step3() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-[#2D1B5E] mb-1">Payment setup</h2>
-        <p className="text-sm text-gray-500">Connect your Paystack account to start receiving payments.</p>
+        <h2 className="text-xl font-semibold text-[#2D1B5E] mb-1">How payments work</h2>
+        <p className="text-sm text-gray-500">Here's how you'll get paid when customers order from your store.</p>
       </div>
-      <div className="bg-[#F0EBFF] rounded-lg px-4 py-3 flex items-start gap-2">
-        <span className="text-[#6C3FC5] text-sm mt-0.5">🛡</span>
-        <p className="text-sm text-[#2D1B5E]">
-          Marves uses Paystack to process payments securely. A <strong>7% commission</strong> is automatically deducted per sale.
-        </p>
+
+      {/* Commission explainer */}
+      <div className="bg-[#F0EBFF] rounded-lg px-4 py-4 flex items-start gap-3">
+        <span className="text-xl mt-0.5">🛡</span>
+        <div>
+          <p className="text-sm font-semibold text-[#2D1B5E] mb-1">Secure payments via Paystack</p>
+          <p className="text-sm text-[#2D1B5E]/80 leading-relaxed">
+            Customers pay through Paystack — Nigeria's most trusted payment platform. Cards, bank transfers, USSD, and mobile money all supported.
+          </p>
+        </div>
       </div>
-      <Field label="Paystack Secret Key" helper="Find this in your Paystack dashboard → Settings → API Keys.">
-        <input type="password" value={data.paystackKey} onChange={e => onChange('paystackKey', e.target.value)}
-          placeholder="sk_live_xxxxxxxxxxxxxxxxxxxx" className={inputClass} />
-      </Field>
-      <div className="border border-gray-200 rounded-lg p-4">
-        <p className="text-sm font-medium text-gray-700 mb-3">Earnings preview</p>
-        <div className="space-y-2">
+
+      {/* How commission works */}
+      <div className="border border-gray-200 rounded-xl p-5">
+        <p className="text-sm font-semibold text-[#1A1A2E] mb-4">How Marves commission works</p>
+        <div className="space-y-3 mb-4">
+          {[
+            { icon: '🛒', text: 'Customer places an order and pays through your store' },
+            { icon: '⚡', text: 'Payment is processed instantly and securely by Paystack' },
+            { icon: '✂️', text: 'Marves automatically deducts a 7% platform commission' },
+            { icon: '💰', text: 'The remaining 93% is transferred to your account' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className="text-base">{item.icon}</span>
+              <p className="text-sm text-gray-600 leading-snug">{item.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Earnings preview */}
+        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Example earnings</p>
           <div className="flex justify-between text-sm"><span className="text-gray-500">Product price</span><span className="font-medium">₦10,000</span></div>
           <div className="flex justify-between text-sm"><span className="text-gray-500">Marves commission (7%)</span><span className="font-medium text-red-500">−₦700</span></div>
-          <div className="border-t border-gray-100 pt-2 flex justify-between text-sm">
-            <span className="font-medium text-gray-700">You receive</span>
-            <span className="font-semibold text-green-600">₦9,300</span>
+          <div className="border-t border-gray-200 pt-2 flex justify-between text-sm">
+            <span className="font-semibold text-gray-700">You receive</span>
+            <span className="font-bold text-green-600">₦9,300</span>
           </div>
         </div>
       </div>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-2">
+        <span className="text-amber-500 text-sm mt-0.5">ℹ</span>
+        <p className="text-sm text-amber-800">
+          You'll connect your Paystack account and bank details in your <strong>dashboard settings</strong> after your store is live.
+        </p>
+      </div>
+
       <p className="text-xs text-gray-400 text-center">
         Don't have a Paystack account?{' '}
         <a href="https://paystack.com" target="_blank" rel="noreferrer" className="text-[#6C3FC5] hover:underline font-medium">Create one free →</a>
@@ -310,7 +339,6 @@ export default function OnboardingPage() {
     name: '', slug: '', description: '',
     category: '', city: '', whatsapp: '',
     instagram: '', tiktok: '',
-    paystackKey: '',
     bannerFile: null, bannerPreview: null,
     logoFile: null, logoPreview: null,
   })
@@ -400,11 +428,11 @@ export default function OnboardingPage() {
       <div className="text-center mb-6">
         <span className="text-xl font-semibold text-[#2D1B5E]">Mar<span className="text-[#6C3FC5]">ves</span></span>
       </div>
-      <StepTracker current={step} />
+      <StepTracker current={step} setStep={setStep} />
       <div className="max-w-lg mx-auto bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
         {step === 1 && <Step1 data={storeData} onChange={onChange} />}
         {step === 2 && <Step2 data={storeData} onChange={onChange} />}
-        {step === 3 && <Step3 data={storeData} onChange={onChange} />}
+        {step === 3 && <Step3 />}
         {step === 4 && <Step4 storeSlug={storeData.slug} />}
         {step < 4 && (
           <div className={`flex items-center mt-8 pt-6 border-t border-gray-100 ${step > 1 ? 'justify-between' : 'justify-end'}`}>
