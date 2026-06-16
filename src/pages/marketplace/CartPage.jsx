@@ -2,13 +2,16 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '../../store/cartStore'
 
+const PLATFORM_FEE_RATE = 0.035 // 3.5% service fee added to customer's total
+
 export default function CartPage() {
   const navigate = useNavigate()
   const { items, updateQuantity, removeItem, clearCart } = useCartStore()
 
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const serviceFee = Math.round(subtotal * PLATFORM_FEE_RATE)
   const deliveryFee = items.some(i => i.product_type === 'physical') ? 1500 : 0
-  const total = subtotal + deliveryFee
+  const total = subtotal + serviceFee + deliveryFee
 
   // Group by vendor
   const groups = items.reduce((acc, item) => {
@@ -129,6 +132,10 @@ export default function CartPage() {
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Subtotal</span>
                     <span className="font-medium">₦{subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Service fee (3.5%)</span>
+                    <span className="font-medium text-gray-600">₦{serviceFee.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Delivery</span>

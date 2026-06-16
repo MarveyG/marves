@@ -230,65 +230,88 @@ function Step2({ data, onChange }) {
   )
 }
 
+const NIGERIAN_BANKS = [
+  'Access Bank', 'Citibank', 'Ecobank', 'Fidelity Bank', 'First Bank',
+  'First City Monument Bank', 'Guaranty Trust Bank', 'Heritage Bank',
+  'Keystone Bank', 'Polaris Bank', 'Providus Bank', 'Stanbic IBTC Bank',
+  'Standard Chartered Bank', 'Sterling Bank', 'Union Bank',
+  'United Bank for Africa', 'Unity Bank', 'Wema Bank', 'Zenith Bank',
+  'Kuda Bank', 'Opay', 'Palmpay', 'Moniepoint', 'VFD Microfinance Bank',
+]
+
 // ── STEP 3 ─────────────────────────────────────────────────
-function Step3() {
+function Step3({ data, onChange }) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-[#2D1B5E] mb-1">How payments work</h2>
-        <p className="text-sm text-gray-500">Here's how you'll get paid when customers order from your store.</p>
+        <h2 className="text-xl font-semibold text-[#2D1B5E] mb-1">Payout details</h2>
+        <p className="text-sm text-gray-500">Where should we send your earnings after each sale?</p>
       </div>
 
-      {/* Commission explainer */}
-      <div className="bg-[#F0EBFF] rounded-lg px-4 py-4 flex items-start gap-3">
-        <span className="text-xl mt-0.5">🛡</span>
-        <div>
-          <p className="text-sm font-semibold text-[#2D1B5E] mb-1">Secure payments via Paystack</p>
-          <p className="text-sm text-[#2D1B5E]/80 leading-relaxed">
-            Customers pay through Paystack — Nigeria's most trusted payment platform. Cards, bank transfers, USSD, and mobile money all supported.
-          </p>
-        </div>
-      </div>
-
-      {/* How commission works */}
-      <div className="border border-gray-200 rounded-xl p-5">
-        <p className="text-sm font-semibold text-[#1A1A2E] mb-4">How Marves commission works</p>
-        <div className="space-y-3 mb-4">
+      {/* How it works */}
+      <div className="bg-[#F0EBFF] rounded-xl p-4 space-y-3">
+        <p className="text-sm font-semibold text-[#2D1B5E]">💜 How payments work on Marves</p>
+        <div className="space-y-2">
           {[
-            { icon: '🛒', text: 'Customer places an order and pays through your store' },
-            { icon: '⚡', text: 'Payment is processed instantly and securely by Paystack' },
-            { icon: '✂️', text: 'Marves automatically deducts a 7% platform commission' },
-            { icon: '💰', text: 'The remaining 93% is transferred to your account' },
+            { icon: '🛒', text: 'Customer buys from your store and pays via Paystack' },
+            { icon: '➕', text: 'A small 3.5% service fee is added on top — paid by the customer, not you' },
+            { icon: '💰', text: 'You receive 100% of your listed price, paid out to your bank account' },
           ].map((item, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className="text-base">{item.icon}</span>
-              <p className="text-sm text-gray-600 leading-snug">{item.text}</p>
+            <div key={i} className="flex items-start gap-2.5">
+              <span className="text-sm">{item.icon}</span>
+              <p className="text-xs text-[#2D1B5E]/80 leading-relaxed">{item.text}</p>
             </div>
           ))}
         </div>
-
-        {/* Earnings preview */}
-        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Example earnings</p>
-          <div className="flex justify-between text-sm"><span className="text-gray-500">Product price</span><span className="font-medium">₦10,000</span></div>
-          <div className="flex justify-between text-sm"><span className="text-gray-500">Marves commission (7%)</span><span className="font-medium text-red-500">−₦700</span></div>
-          <div className="border-t border-gray-200 pt-2 flex justify-between text-sm">
+        {/* Example */}
+        <div className="bg-white/60 rounded-lg p-3 space-y-1.5 mt-1">
+          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Example</p>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Your listed price</span><span className="font-medium">₦10,000</span></div>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Service fee (3.5%, paid by customer)</span><span className="font-medium text-[#6C3FC5]">+₦350</span></div>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Customer pays</span><span className="font-medium">₦10,350</span></div>
+          <div className="border-t border-gray-200 pt-1.5 flex justify-between text-xs">
             <span className="font-semibold text-gray-700">You receive</span>
-            <span className="font-bold text-green-600">₦9,300</span>
+            <span className="font-bold text-green-600">₦10,000</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-2">
-        <span className="text-amber-500 text-sm mt-0.5">ℹ</span>
-        <p className="text-sm text-amber-800">
-          You'll connect your Paystack account and bank details in your <strong>dashboard settings</strong> after your store is live.
-        </p>
+      {/* Bank details */}
+      <div className="space-y-4">
+        <p className="text-sm font-semibold text-[#1A1A2E]">Your payout bank account</p>
+        <Field label="Bank name">
+          <select
+            value={data.bankName}
+            onChange={e => onChange('bankName', e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Select your bank...</option>
+            {NIGERIAN_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </Field>
+        <Field label="Account number">
+          <input
+            type="text"
+            value={data.accountNumber}
+            onChange={e => onChange('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
+            placeholder="0123456789"
+            maxLength={10}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Account name" helper="Enter the name on your bank account">
+          <input
+            type="text"
+            value={data.accountName}
+            onChange={e => onChange('accountName', e.target.value)}
+            placeholder="e.g. Amaka Okafor"
+            className={inputClass}
+          />
+        </Field>
       </div>
 
       <p className="text-xs text-gray-400 text-center">
-        Don't have a Paystack account?{' '}
-        <a href="https://paystack.com" target="_blank" rel="noreferrer" className="text-[#6C3FC5] hover:underline font-medium">Create one free →</a>
+        You can update your payout details anytime in dashboard settings.
       </p>
     </div>
   )
@@ -341,6 +364,7 @@ export default function OnboardingPage() {
     instagram: '', tiktok: '',
     bannerFile: null, bannerPreview: null,
     logoFile: null, logoPreview: null,
+    bankName: '', accountNumber: '', accountName: '',
   })
 
   const onChange = (key, value) => setStoreData(prev => ({ ...prev, [key]: value }))
@@ -350,6 +374,11 @@ export default function OnboardingPage() {
       if (!storeData.name) { toast.error('Store name is required'); return false }
       if (!storeData.slug) { toast.error('Store URL is required'); return false }
       if (!storeData.category) { toast.error('Please select a category'); return false }
+    }
+    if (step === 3) {
+      if (!storeData.bankName) { toast.error('Please select your bank'); return false }
+      if (!storeData.accountNumber || storeData.accountNumber.length < 10) { toast.error('Please enter a valid 10-digit account number'); return false }
+      if (!storeData.accountName.trim()) { toast.error('Please enter your account name'); return false }
     }
     return true
   }
@@ -397,6 +426,9 @@ export default function OnboardingPage() {
           tiktok: storeData.tiktok,
           banner_url: bannerUrl,
           logo_url: logoUrl,
+          bank_name: storeData.bankName,
+          account_number: storeData.accountNumber,
+          account_name: storeData.accountName,
           status: 'active',
         })
 
@@ -432,7 +464,7 @@ export default function OnboardingPage() {
       <div className="max-w-lg mx-auto bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
         {step === 1 && <Step1 data={storeData} onChange={onChange} />}
         {step === 2 && <Step2 data={storeData} onChange={onChange} />}
-        {step === 3 && <Step3 />}
+        {step === 3 && <Step3 data={storeData} onChange={onChange} />}
         {step === 4 && <Step4 storeSlug={storeData.slug} />}
         {step < 4 && (
           <div className={`flex items-center mt-8 pt-6 border-t border-gray-100 ${step > 1 ? 'justify-between' : 'justify-end'}`}>

@@ -40,9 +40,11 @@ export default function CheckoutPage() {
     note: '',
   })
 
+  const PLATFORM_FEE_RATE = 0.035 // 3.5% service fee added to customer total
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const serviceFee = Math.round(subtotal * PLATFORM_FEE_RATE)
   const deliveryFee = items.some(i => i.product_type === 'physical') ? 1500 : 0
-  const total = subtotal + deliveryFee
+  const total = subtotal + serviceFee + deliveryFee
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -77,6 +79,7 @@ export default function CheckoutPage() {
           delivery_state: form.state,
           delivery_note: form.note,
           subtotal,
+          service_fee: serviceFee,
           delivery_fee: deliveryFee,
           total,
           payment_method: 'paystack',
@@ -100,9 +103,9 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         unit_price: item.price,
         total_price: item.price * item.quantity,
-        commission_rate: 7,
-        commission_amount: Math.round(item.price * item.quantity * 0.07),
-        vendor_payout: Math.round(item.price * item.quantity * 0.93),
+        commission_rate: 3.5,
+        commission_amount: Math.round(item.price * item.quantity * PLATFORM_FEE_RATE),
+        vendor_payout: item.price * item.quantity,
         status: 'pending',
       }))
 
@@ -164,6 +167,10 @@ export default function CheckoutPage() {
       </div>
       <div className="border-t border-gray-100 pt-3 space-y-1.5 mb-4">
         <div className="flex justify-between text-xs"><span className="text-gray-500">Subtotal</span><span className="font-medium">₦{subtotal.toLocaleString()}</span></div>
+        <div className="flex justify-between text-xs">
+          <span className="text-gray-500">Service fee (3.5%)</span>
+          <span className="font-medium text-gray-600">₦{serviceFee.toLocaleString()}</span>
+        </div>
         <div className="flex justify-between text-xs"><span className="text-gray-500">Delivery</span><span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : ''}`}>{deliveryFee === 0 ? 'Free' : `₦${deliveryFee.toLocaleString()}`}</span></div>
       </div>
       <div className="flex justify-between items-center pt-3 border-t border-gray-100">

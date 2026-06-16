@@ -10,7 +10,7 @@ const CATEGORIES = [
   'Agriculture & Farm', 'Automotive', 'Services', 'Other'
 ]
 
-const COMMISSION_RATE = 0.07
+const PLATFORM_FEE_RATE = 0.035 // 3.5% service fee added to customer, vendor keeps full price
 
 function Field({ label, optional, helper, error, children }) {
   return (
@@ -79,8 +79,8 @@ export default function AddProductPage() {
 
   // Commission preview
   const price = parseFloat(form.price) || 0
-  const commission = Math.round(price * COMMISSION_RATE)
-  const payout = price - commission
+  const serviceFee = Math.round(price * PLATFORM_FEE_RATE)
+  const customerPays = price + serviceFee
 
   // Image handling
   const handleImages = (e) => {
@@ -528,21 +528,25 @@ export default function AddProductPage() {
               <p className="text-sm font-medium text-[#1A1A2E] mb-3">Earnings preview</p>
               <div className="bg-[#F0EBFF] rounded-lg px-3 py-2 mb-3 flex items-start gap-1.5">
                 <span className="text-[#6C3FC5] text-xs">ℹ</span>
-                <p className="text-xs text-[#2D1B5E]">Marves takes a 7% commission per sale.</p>
+                <p className="text-xs text-[#2D1B5E]">Marves adds a 3.5% service fee on top — paid by the customer, not you.</p>
               </div>
               <div className="space-y-2 bg-gray-50 rounded-lg p-3">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Product price</span>
+                  <span className="text-gray-500">Your listed price</span>
                   <span className="font-medium">₦{price > 0 ? price.toLocaleString() : '0'}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Commission (7%)</span>
-                  <span className="font-medium text-red-500">−₦{commission.toLocaleString()}</span>
+                  <span className="text-gray-500">Service fee (3.5%, paid by customer)</span>
+                  <span className="font-medium text-[#6C3FC5]">+₦{price > 0 ? serviceFee.toLocaleString() : '0'}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Customer pays</span>
+                  <span className="font-medium">₦{price > 0 ? customerPays.toLocaleString() : '0'}</span>
                 </div>
                 <div className="border-t border-gray-200 pt-2 flex justify-between text-xs">
                   <span className="font-medium text-gray-700">You receive</span>
-                  <span className={`font-semibold ${payout > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                    ₦{payout > 0 ? payout.toLocaleString() : '0'}
+                  <span className={`font-semibold ${price > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                    ₦{price > 0 ? price.toLocaleString() : '0'}
                   </span>
                 </div>
               </div>
