@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -17,13 +17,9 @@ const CATEGORIES = [
   'Agriculture & Farm', 'Automotive', 'Services', 'Other'
 ]
 
-const STATES = [
-  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa',
-  'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo',
-  'Ekiti', 'Enugu', 'FCT - Abuja', 'Gombe', 'Imo', 'Jigawa',
-  'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
-  'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun',
-  'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
+const CITIES = [
+  'Lagos', 'Abuja', 'Port Harcourt', 'Kano',
+  'Ibadan', 'Enugu', 'Benin City', 'Kaduna', 'Other'
 ]
 
 function slugify(text) {
@@ -107,46 +103,20 @@ function Step1({ data, onChange }) {
           placeholder="Tell customers what you sell and what makes your store special..."
           rows={3} className={`${inputClass} resize-none`} />
       </Field>
-      <Field label="Categories" helper="Select all that apply to your store">
-        <div className="border border-gray-200 rounded-lg p-3 focus-within:border-[#6C3FC5] focus-within:ring-2 focus-within:ring-[#6C3FC5]/10 transition-all">
-          <div className="flex flex-wrap gap-1.5 mb-2 min-h-[24px]">
-            {(data.categories || []).map(cat => (
-              <span key={cat} className="flex items-center gap-1 px-2 py-0.5 bg-[#F0EBFF] text-[#6C3FC5] text-xs rounded-full font-medium">
-                {cat}
-                <button
-                  type="button"
-                  onClick={() => onChange('categories', data.categories.filter(c => c !== cat))}
-                  className="hover:text-red-500 text-[#6C3FC5]/60 leading-none"
-                >×</button>
-              </span>
-            ))}
-            {(data.categories || []).length === 0 && (
-              <span className="text-xs text-gray-400">No categories selected yet</span>
-            )}
-          </div>
-          <select
-            value=""
-            onChange={e => {
-              const val = e.target.value
-              if (!val) return
-              const current = data.categories || []
-              if (!current.includes(val)) onChange('categories', [...current, val])
-            }}
-            className="w-full text-sm outline-none bg-transparent text-gray-500 cursor-pointer"
-          >
-            <option value="">+ Add a category...</option>
-            {CATEGORIES.filter(c => !(data.categories || []).includes(c)).map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Category">
+          <select value={data.category} onChange={e => onChange('category', e.target.value)} className={inputClass}>
+            <option value="">Select category...</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-        </div>
-      </Field>
-      <Field label="State">
-        <select value={data.state} onChange={e => onChange('state', e.target.value)} className={inputClass}>
-          <option value="">Select state...</option>
-          {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </Field>
+        </Field>
+        <Field label="City">
+          <select value={data.city} onChange={e => onChange('city', e.target.value)} className={inputClass}>
+            <option value="">Select city...</option>
+            {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </Field>
+      </div>
       <Field label="WhatsApp number" helper="For order notifications — customers can also chat with you directly.">
         <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-[#6C3FC5] focus-within:ring-2 focus-within:ring-[#6C3FC5]/10">
           <span className="px-3 py-2.5 text-sm text-gray-400 bg-gray-50 border-r border-gray-200">+234</span>
@@ -367,11 +337,10 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [storeData, setStoreData] = useState({
     name: '', slug: '', description: '',
-    categories: [], state: '', whatsapp: '',
+    category: '', city: '', whatsapp: '',
     instagram: '', tiktok: '',
     bannerFile: null, bannerPreview: null,
     logoFile: null, logoPreview: null,
-    bankName: '', accountNumber: '', accountName: '',
   })
 
   const onChange = (key, value) => setStoreData(prev => ({ ...prev, [key]: value }))
@@ -380,13 +349,7 @@ export default function OnboardingPage() {
     if (step === 1) {
       if (!storeData.name) { toast.error('Store name is required'); return false }
       if (!storeData.slug) { toast.error('Store URL is required'); return false }
-      if (!storeData.categories.length) { toast.error('Please select at least one category'); return false }
-      if (!storeData.state) { toast.error('Please select your state'); return false }
-    }
-    if (step === 3) {
-      if (!storeData.bankName) { toast.error('Please select your bank'); return false }
-      if (!storeData.accountNumber || storeData.accountNumber.length < 10) { toast.error('Please enter a valid 10-digit account number'); return false }
-      if (!storeData.accountName.trim()) { toast.error('Please enter your account name'); return false }
+      if (!storeData.category) { toast.error('Please select a category'); return false }
     }
     return true
   }
@@ -427,17 +390,13 @@ export default function OnboardingPage() {
           name: storeData.name,
           slug: storeData.slug,
           description: storeData.description,
-          category: storeData.categories[0] || null,
-          categories: storeData.categories,
-          city: storeData.state,
+          category: storeData.category,
+          city: storeData.city,
           whatsapp: storeData.whatsapp ? `+234${storeData.whatsapp}` : null,
           instagram: storeData.instagram,
           tiktok: storeData.tiktok,
           banner_url: bannerUrl,
           logo_url: logoUrl,
-          bank_name: storeData.bankName,
-          account_number: storeData.accountNumber,
-          account_name: storeData.accountName,
           status: 'active',
         })
 
@@ -466,7 +425,10 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="text-center mb-6">
+      <div className="text-center mb-6 relative">
+        <Link to="/" className="absolute left-0 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors">
+          ← Homepage
+        </Link>
         <span className="text-xl font-semibold text-[#2D1B5E]">Mar<span className="text-[#6C3FC5]">ves</span></span>
       </div>
       <StepTracker current={step} setStep={setStep} />

@@ -50,6 +50,8 @@ export default function RegisterPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
   const [accountType, setAccountType] = useState('vendor')
   const [form, setForm] = useState({
     fullName: '',
@@ -97,12 +99,53 @@ export default function RegisterPage() {
         .eq('id', data.user.id)
     }
 
-    toast.success('Account created!')
-
-    if (accountType === 'vendor') navigate('/onboarding')
-    else navigate('/')
-
+    setRegisteredEmail(form.email)
+    setEmailSent(true)
     setLoading(false)
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4">
+        <div className="text-center mb-8">
+          <Link to="/">
+            <span className="text-2xl font-semibold text-[#2D1B5E]">
+              Mar<span className="text-[#6C3FC5]">ves</span>
+            </span>
+          </Link>
+        </div>
+        <div className="max-w-md w-full mx-auto bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
+          <div className="w-16 h-16 rounded-full bg-[#F0EBFF] flex items-center justify-center mx-auto mb-5">
+            <span className="text-3xl">✉️</span>
+          </div>
+          <h1 className="text-xl font-semibold text-[#2D1B5E] mb-2">Check your email</h1>
+          <p className="text-sm text-gray-500 mb-2 leading-relaxed">
+            We've sent a verification link to:
+          </p>
+          <p className="text-sm font-semibold text-[#2D1B5E] mb-5">{registeredEmail}</p>
+          <p className="text-xs text-gray-400 leading-relaxed mb-6">
+            Click the link in the email to verify your account. Once verified, you'll be taken to set up your store.
+          </p>
+          <div className="bg-[#F0EBFF] rounded-lg px-4 py-3 text-left mb-6">
+            <p className="text-xs text-[#2D1B5E] font-medium mb-1">Can't find the email?</p>
+            <p className="text-xs text-[#2D1B5E]/70">Check your spam or junk folder. It may take a minute to arrive.</p>
+          </div>
+          <Link
+            to="/login"
+            className="block w-full py-2.5 bg-[#6C3FC5] hover:bg-[#5A31A8] text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Go to sign in
+          </Link>
+          <button
+            onClick={() => { setEmailSent(false); setError('') }}
+            className="mt-3 text-xs text-gray-400 hover:text-gray-600"
+          >
+            ← Use a different email
+          </button>
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-6">© 2026 Marves · Made with love in Nigeria 🇳🇬</p>
+      </div>
+    )
   }
 
   return (
