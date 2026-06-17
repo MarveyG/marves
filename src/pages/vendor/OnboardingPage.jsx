@@ -17,9 +17,13 @@ const CATEGORIES = [
   'Agriculture & Farm', 'Automotive', 'Services', 'Other'
 ]
 
-const CITIES = [
-  'Lagos', 'Abuja', 'Port Harcourt', 'Kano',
-  'Ibadan', 'Enugu', 'Benin City', 'Kaduna', 'Other'
+const STATES = [
+  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa',
+  'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo',
+  'Ekiti', 'Enugu', 'FCT - Abuja', 'Gombe', 'Imo', 'Jigawa',
+  'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
+  'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun',
+  'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
 ]
 
 function slugify(text) {
@@ -103,20 +107,46 @@ function Step1({ data, onChange }) {
           placeholder="Tell customers what you sell and what makes your store special..."
           rows={3} className={`${inputClass} resize-none`} />
       </Field>
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Category">
-          <select value={data.category} onChange={e => onChange('category', e.target.value)} className={inputClass}>
-            <option value="">Select category...</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+      <Field label="Categories" helper="Select all that apply to your store">
+        <div className="border border-gray-200 rounded-lg p-3 focus-within:border-[#6C3FC5] focus-within:ring-2 focus-within:ring-[#6C3FC5]/10 transition-all">
+          <div className="flex flex-wrap gap-1.5 mb-2 min-h-[24px]">
+            {(data.categories || []).map(cat => (
+              <span key={cat} className="flex items-center gap-1 px-2 py-0.5 bg-[#F0EBFF] text-[#6C3FC5] text-xs rounded-full font-medium">
+                {cat}
+                <button
+                  type="button"
+                  onClick={() => onChange('categories', data.categories.filter(c => c !== cat))}
+                  className="hover:text-red-500 text-[#6C3FC5]/60 leading-none"
+                >×</button>
+              </span>
+            ))}
+            {(data.categories || []).length === 0 && (
+              <span className="text-xs text-gray-400">No categories selected yet</span>
+            )}
+          </div>
+          <select
+            value=""
+            onChange={e => {
+              const val = e.target.value
+              if (!val) return
+              const current = data.categories || []
+              if (!current.includes(val)) onChange('categories', [...current, val])
+            }}
+            className="w-full text-sm outline-none bg-transparent text-gray-500 cursor-pointer"
+          >
+            <option value="">+ Add a category...</option>
+            {CATEGORIES.filter(c => !(data.categories || []).includes(c)).map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
-        </Field>
-        <Field label="City">
-          <select value={data.city} onChange={e => onChange('city', e.target.value)} className={inputClass}>
-            <option value="">Select city...</option>
-            {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </Field>
-      </div>
+        </div>
+      </Field>
+      <Field label="State">
+        <select value={data.state} onChange={e => onChange('state', e.target.value)} className={inputClass}>
+          <option value="">Select state...</option>
+          {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </Field>
       <Field label="WhatsApp number" helper="For order notifications — customers can also chat with you directly.">
         <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-[#6C3FC5] focus-within:ring-2 focus-within:ring-[#6C3FC5]/10">
           <span className="px-3 py-2.5 text-sm text-gray-400 bg-gray-50 border-r border-gray-200">+234</span>
@@ -230,88 +260,65 @@ function Step2({ data, onChange }) {
   )
 }
 
-const NIGERIAN_BANKS = [
-  'Access Bank', 'Citibank', 'Ecobank', 'Fidelity Bank', 'First Bank',
-  'First City Monument Bank', 'Guaranty Trust Bank', 'Heritage Bank',
-  'Keystone Bank', 'Polaris Bank', 'Providus Bank', 'Stanbic IBTC Bank',
-  'Standard Chartered Bank', 'Sterling Bank', 'Union Bank',
-  'United Bank for Africa', 'Unity Bank', 'Wema Bank', 'Zenith Bank',
-  'Kuda Bank', 'Opay', 'Palmpay', 'Moniepoint', 'VFD Microfinance Bank',
-]
-
 // ── STEP 3 ─────────────────────────────────────────────────
-function Step3({ data, onChange }) {
+function Step3() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-[#2D1B5E] mb-1">Payout details</h2>
-        <p className="text-sm text-gray-500">Where should we send your earnings after each sale?</p>
+        <h2 className="text-xl font-semibold text-[#2D1B5E] mb-1">How payments work</h2>
+        <p className="text-sm text-gray-500">Here's how you'll get paid when customers order from your store.</p>
       </div>
 
-      {/* How it works */}
-      <div className="bg-[#F0EBFF] rounded-xl p-4 space-y-3">
-        <p className="text-sm font-semibold text-[#2D1B5E]">💜 How payments work on Marves</p>
-        <div className="space-y-2">
+      {/* Commission explainer */}
+      <div className="bg-[#F0EBFF] rounded-lg px-4 py-4 flex items-start gap-3">
+        <span className="text-xl mt-0.5">🛡</span>
+        <div>
+          <p className="text-sm font-semibold text-[#2D1B5E] mb-1">Secure payments via Paystack</p>
+          <p className="text-sm text-[#2D1B5E]/80 leading-relaxed">
+            Customers pay through Paystack — Nigeria's most trusted payment platform. Cards, bank transfers, USSD, and mobile money all supported.
+          </p>
+        </div>
+      </div>
+
+      {/* How commission works */}
+      <div className="border border-gray-200 rounded-xl p-5">
+        <p className="text-sm font-semibold text-[#1A1A2E] mb-4">How Marves commission works</p>
+        <div className="space-y-3 mb-4">
           {[
-            { icon: '🛒', text: 'Customer buys from your store and pays via Paystack' },
-            { icon: '➕', text: 'A small 3.5% service fee is added on top — paid by the customer, not you' },
-            { icon: '💰', text: 'You receive 100% of your listed price, paid out to your bank account' },
+            { icon: '🛒', text: 'Customer places an order and pays through your store' },
+            { icon: '⚡', text: 'Payment is processed instantly and securely by Paystack' },
+            { icon: '✂️', text: 'Marves automatically deducts a 7% platform commission' },
+            { icon: '💰', text: 'The remaining 93% is transferred to your account' },
           ].map((item, i) => (
-            <div key={i} className="flex items-start gap-2.5">
-              <span className="text-sm">{item.icon}</span>
-              <p className="text-xs text-[#2D1B5E]/80 leading-relaxed">{item.text}</p>
+            <div key={i} className="flex items-start gap-3">
+              <span className="text-base">{item.icon}</span>
+              <p className="text-sm text-gray-600 leading-snug">{item.text}</p>
             </div>
           ))}
         </div>
-        {/* Example */}
-        <div className="bg-white/60 rounded-lg p-3 space-y-1.5 mt-1">
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Example</p>
-          <div className="flex justify-between text-xs"><span className="text-gray-500">Your listed price</span><span className="font-medium">₦10,000</span></div>
-          <div className="flex justify-between text-xs"><span className="text-gray-500">Service fee (3.5%, paid by customer)</span><span className="font-medium text-[#6C3FC5]">+₦350</span></div>
-          <div className="flex justify-between text-xs"><span className="text-gray-500">Customer pays</span><span className="font-medium">₦10,350</span></div>
-          <div className="border-t border-gray-200 pt-1.5 flex justify-between text-xs">
+
+        {/* Earnings preview */}
+        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Example earnings</p>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">Product price</span><span className="font-medium">₦10,000</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">Marves commission (7%)</span><span className="font-medium text-red-500">−₦700</span></div>
+          <div className="border-t border-gray-200 pt-2 flex justify-between text-sm">
             <span className="font-semibold text-gray-700">You receive</span>
-            <span className="font-bold text-green-600">₦10,000</span>
+            <span className="font-bold text-green-600">₦9,300</span>
           </div>
         </div>
       </div>
 
-      {/* Bank details */}
-      <div className="space-y-4">
-        <p className="text-sm font-semibold text-[#1A1A2E]">Your payout bank account</p>
-        <Field label="Bank name">
-          <select
-            value={data.bankName}
-            onChange={e => onChange('bankName', e.target.value)}
-            className={inputClass}
-          >
-            <option value="">Select your bank...</option>
-            {NIGERIAN_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
-        </Field>
-        <Field label="Account number">
-          <input
-            type="text"
-            value={data.accountNumber}
-            onChange={e => onChange('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="0123456789"
-            maxLength={10}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Account name" helper="Enter the name on your bank account">
-          <input
-            type="text"
-            value={data.accountName}
-            onChange={e => onChange('accountName', e.target.value)}
-            placeholder="e.g. Amaka Okafor"
-            className={inputClass}
-          />
-        </Field>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-2">
+        <span className="text-amber-500 text-sm mt-0.5">ℹ</span>
+        <p className="text-sm text-amber-800">
+          You'll connect your Paystack account and bank details in your <strong>dashboard settings</strong> after your store is live.
+        </p>
       </div>
 
       <p className="text-xs text-gray-400 text-center">
-        You can update your payout details anytime in dashboard settings.
+        Don't have a Paystack account?{' '}
+        <a href="https://paystack.com" target="_blank" rel="noreferrer" className="text-[#6C3FC5] hover:underline font-medium">Create one free →</a>
       </p>
     </div>
   )
@@ -360,7 +367,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [storeData, setStoreData] = useState({
     name: '', slug: '', description: '',
-    category: '', city: '', whatsapp: '',
+    categories: [], state: '', whatsapp: '',
     instagram: '', tiktok: '',
     bannerFile: null, bannerPreview: null,
     logoFile: null, logoPreview: null,
@@ -373,7 +380,8 @@ export default function OnboardingPage() {
     if (step === 1) {
       if (!storeData.name) { toast.error('Store name is required'); return false }
       if (!storeData.slug) { toast.error('Store URL is required'); return false }
-      if (!storeData.category) { toast.error('Please select a category'); return false }
+      if (!storeData.categories.length) { toast.error('Please select at least one category'); return false }
+      if (!storeData.state) { toast.error('Please select your state'); return false }
     }
     if (step === 3) {
       if (!storeData.bankName) { toast.error('Please select your bank'); return false }
@@ -419,8 +427,9 @@ export default function OnboardingPage() {
           name: storeData.name,
           slug: storeData.slug,
           description: storeData.description,
-          category: storeData.category,
-          city: storeData.city,
+          category: storeData.categories[0] || null,
+          categories: storeData.categories,
+          city: storeData.state,
           whatsapp: storeData.whatsapp ? `+234${storeData.whatsapp}` : null,
           instagram: storeData.instagram,
           tiktok: storeData.tiktok,
@@ -464,7 +473,7 @@ export default function OnboardingPage() {
       <div className="max-w-lg mx-auto bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
         {step === 1 && <Step1 data={storeData} onChange={onChange} />}
         {step === 2 && <Step2 data={storeData} onChange={onChange} />}
-        {step === 3 && <Step3 data={storeData} onChange={onChange} />}
+        {step === 3 && <Step3 />}
         {step === 4 && <Step4 storeSlug={storeData.slug} />}
         {step < 4 && (
           <div className={`flex items-center mt-8 pt-6 border-t border-gray-100 ${step > 1 ? 'justify-between' : 'justify-end'}`}>
