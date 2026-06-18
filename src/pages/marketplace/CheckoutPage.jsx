@@ -1,10 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useCartStore } from '../../store/cartStore'
 import toast from 'react-hot-toast'
 
 const STEPS = ['Cart', 'Delivery', 'Payment']
+
+const NIGERIAN_STATES = [
+  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa',
+  'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo',
+  'Ekiti', 'Enugu', 'FCT - Abuja', 'Gombe', 'Imo', 'Jigawa',
+  'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
+  'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun',
+  'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
+]
+
+const PLATFORM_FEE_RATE = 0.035
 
 function StepTracker({ current }) {
   return (
@@ -29,18 +40,26 @@ function StepTracker({ current }) {
   )
 }
 
+console.log('Paystack key:', import.meta.env.VITE_PAYSTACK_PUBLIC_KEY)
+
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { items, clearCart } = useCartStore()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '',
-    address: '', city: 'Lagos', state: 'Lagos State',
+    address: '', city: '', state: 'Lagos',
     note: '',
   })
 
-  const PLATFORM_FEE_RATE = 0.035
+  // Wait for cart store to hydrate from localStorage before checking if empty
+  useEffect(() => {
+    const timer = setTimeout(() => setHydrated(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
   const serviceFee = Math.round(subtotal * PLATFORM_FEE_RATE)
   const deliveryFee = items.some(i => i.product_type === 'physical') ? 1500 : 0
@@ -57,6 +76,9 @@ export default function CheckoutPage() {
     if (items.some(i => i.product_type === 'physical') && !form.address.trim()) {
       toast.error('Delivery address is required'); return false
     }
+    if (items.some(i => i.product_type === 'physical') && !form.state) {
+      toast.error('Please select your state'); return false
+    }
     return true
   }
 
@@ -65,7 +87,6 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      // Create order in Supabase
       const orderRef = `MV-${Date.now().toString().slice(-6)}`
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -91,7 +112,6 @@ export default function CheckoutPage() {
 
       if (orderError) throw new Error(orderError.message)
 
-      // Create order items
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.id,
@@ -111,11 +131,10 @@ export default function CheckoutPage() {
 
       await supabase.from('order_items').insert(orderItems)
 
-      // Initialise Paystack
       const handler = window.PaystackPop.setup({
-        key: 'pk_test_c317b192f007e560720b69db78a2c1d010f44950a',
+        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
         email: form.email,
-        amount: total * 100, // kobo
+        amount: total * 100,
         ref: orderRef,
         metadata: { order_id: order.id, customer_name: form.fullName },
         onSuccess: async (response) => {
@@ -139,17 +158,35 @@ export default function CheckoutPage() {
       })
       handler.openIframe()
     } catch (err) {
-      toast.error(err.message)
+      if (err.message.includes('fetch') || err.message.includes('network')) {
+        toast.error('Connection error — please check your internet and try again.')
+      } else {
+        toast.error(err.message)
+      }
       setLoading(false)
     }
   }
 
-  if (items.length === 0) {
-    navigate('/cart')
-    return null
+  // Show loading while cart hydrates from localStorage
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#6C3FC5]/30 border-t-[#6C3FC5] rounded-full animate-spin" />
+      </div>
+    )
   }
 
-  // Shared order summary
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+        <p className="text-gray-500 text-sm">Your cart is empty</p>
+        <Link to="/" className="px-4 py-2 bg-[#6C3FC5] text-white text-sm rounded-lg hover:bg-[#5A31A8]">
+          Continue shopping
+        </Link>
+      </div>
+    )
+  }
+
   const OrderSummary = ({ showButton = false }) => (
     <div className="bg-white border border-gray-200 rounded-xl p-5">
       <p className="text-sm font-semibold text-[#1A1A2E] mb-4">Order summary</p>
@@ -157,7 +194,10 @@ export default function CheckoutPage() {
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gray-50 flex-shrink-0 overflow-hidden">
-              {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-sm">{item.product_type === 'digital' ? '📄' : '📦'}</div>}
+              {item.image
+                ? <img src={item.image} alt="" className="w-full h-full object-cover" />
+                : <div className="w-full h-full flex items-center justify-center text-sm">{item.product_type === 'digital' ? '📄' : '📦'}</div>
+              }
             </div>
             <span className="flex-1 text-xs text-gray-600 truncate">{item.name} {item.quantity > 1 ? `×${item.quantity}` : ''}</span>
             <span className="text-xs font-medium flex-shrink-0">₦{(item.price * item.quantity).toLocaleString()}</span>
@@ -174,8 +214,11 @@ export default function CheckoutPage() {
         <span className="text-base font-bold text-[#6C3FC5]">₦{total.toLocaleString()}</span>
       </div>
       {showButton && (
-        <button onClick={() => step === 0 ? setStep(1) : handlePaystack()} disabled={loading}
-          className="w-full mt-4 py-3 bg-[#6C3FC5] hover:bg-[#5A31A8] disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+        <button
+          onClick={() => step === 0 ? setStep(1) : handlePaystack()}
+          disabled={loading}
+          className="w-full mt-4 py-3 bg-[#6C3FC5] hover:bg-[#5A31A8] disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
           {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
           {step === 0 ? 'Proceed to delivery →' : `Pay ₦${total.toLocaleString()} →`}
         </button>
@@ -185,7 +228,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Nav */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/" className="text-lg font-semibold text-[#2D1B5E]">Mar<span className="text-[#6C3FC5]">ves</span></Link>
@@ -202,7 +244,6 @@ export default function CheckoutPage() {
 
           {/* Left */}
           <div>
-
             {/* Step 0: Review cart */}
             {step === 0 && (
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -212,7 +253,10 @@ export default function CheckoutPage() {
                 {items.map((item, i) => (
                   <div key={i} className="flex items-start gap-3 p-4 border-b border-gray-50 last:border-0">
                     <div className="w-14 h-14 rounded-lg bg-gray-50 flex-shrink-0 overflow-hidden">
-                      {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-2xl bg-[#F0EBFF]">{item.product_type === 'digital' ? '📄' : '📦'}</div>}
+                      {item.image
+                        ? <img src={item.image} alt="" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center text-2xl bg-[#F0EBFF]">{item.product_type === 'digital' ? '📄' : '📦'}</div>
+                      }
                     </div>
                     <div className="flex-1">
                       <p className="text-xs font-medium text-[#1A1A2E] mb-0.5">{item.name}</p>
@@ -253,15 +297,17 @@ export default function CheckoutPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1.5">City</label>
-                            <select value={form.city} onChange={e => set('city', e.target.value)} className={inputCls}>
-                              {['Lagos', 'Abuja', 'Port Harcourt', 'Kano', 'Ibadan', 'Enugu', 'Other'].map(c => <option key={c}>{c}</option>)}
+                            <label className="block text-xs font-medium text-gray-600 mb-1.5">State</label>
+                            <select value={form.state} onChange={e => set('state', e.target.value)} className={inputCls}>
+                              <option value="">Select state...</option>
+                              {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1.5">State</label>
-                            <select value={form.state} onChange={e => set('state', e.target.value)} className={inputCls}>
-                              {['Lagos State', 'FCT', 'Rivers State', 'Kano State', 'Oyo State', 'Enugu State', 'Other'].map(s => <option key={s}>{s}</option>)}
+                            <label className="block text-xs font-medium text-gray-600 mb-1.5">City</label>
+                            <select value={form.city} onChange={e => set('city', e.target.value)} className={inputCls}>
+                              <option value="">Select city...</option>
+                              {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                           </div>
                         </div>
@@ -282,7 +328,6 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Back button */}
             {step > 0 && (
               <button onClick={() => setStep(s => s - 1)} className="mt-4 text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1">
                 ← Back
