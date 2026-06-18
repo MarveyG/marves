@@ -119,7 +119,6 @@ export default function CheckoutPage() {
         ref: orderRef,
         metadata: { order_id: order.id, customer_name: form.fullName },
         onSuccess: async (response) => {
-          // Payment successful — update order
           await supabase
             .from('orders')
             .update({ payment_status: 'paid', payment_reference: response.reference, status: 'confirmed' })
