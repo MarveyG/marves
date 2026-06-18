@@ -17,16 +17,18 @@ const NIGERIAN_STATES = [
 
 const PLATFORM_FEE_RATE = 0.035
 
-function StepTracker({ current }) {
+function StepTracker({ current, setStep }) {
   return (
     <div className="flex items-center justify-center gap-0 py-4 border-b border-gray-100">
       {STEPS.map((s, i) => (
         <div key={s} className="flex items-center">
           <div className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-all
-              ${i < current ? 'bg-[#F0EBFF] text-[#6C3FC5] border-2 border-[#6C3FC5]'
-              : i === current ? 'bg-[#6C3FC5] text-white'
-              : 'bg-white border-2 border-gray-200 text-gray-400'}`}>
+            <div
+              onClick={() => i < current && setStep(i)}
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-all
+              ${i < current ? 'bg-[#F0EBFF] text-[#6C3FC5] border-2 border-[#6C3FC5] cursor-pointer hover:bg-[#6C3FC5] hover:text-white'
+              : i === current ? 'bg-[#6C3FC5] text-white cursor-default'
+              : 'bg-white border-2 border-gray-200 text-gray-400 cursor-default'}`}>
               {i < current ? '✓' : i + 1}
             </div>
             <span className={`text-xs font-medium hidden sm:block ${i <= current ? 'text-[#6C3FC5]' : 'text-gray-400'}`}>{s}</span>
@@ -231,7 +233,7 @@ export default function CheckoutPage() {
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/" className="text-lg font-semibold text-[#2D1B5E]">Mar<span className="text-[#6C3FC5]">ves</span></Link>
-          <StepTracker current={step} />
+          <StepTracker current={step} setStep={setStep} />
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             Secure checkout
