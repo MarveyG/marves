@@ -113,7 +113,7 @@ export default function CheckoutPage() {
 
       // Initialise Paystack
       const handler = window.PaystackPop.setup({
-        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        key: 'pk_test_c317b192f007e560720b69db78a2c1d010f44950a',
         email: form.email,
         amount: total * 100, // kobo
         ref: orderRef,
