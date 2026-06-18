@@ -116,7 +116,7 @@ export default function CheckoutPage() {
         order_id: order.id,
         product_id: item.id,
         store_id: item.store_id,
-        vendor_id: item.vendor_id || item.store_id,
+        vendor_id: item.store_id,
         product_name: item.name,
         product_image: item.image,
         product_type: item.product_type,
