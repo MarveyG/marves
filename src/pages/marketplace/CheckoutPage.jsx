@@ -16,6 +16,7 @@ const NIGERIAN_STATES = [
 ]
 
 const PLATFORM_FEE_RATE = 0.035
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
 
 function StepTracker({ current, setStep }) {
   return (
@@ -41,8 +42,6 @@ function StepTracker({ current, setStep }) {
     </div>
   )
 }
-
-console.log('Paystack key:', import.meta.env.VITE_PAYSTACK_PUBLIC_KEY)
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
@@ -86,6 +85,17 @@ export default function CheckoutPage() {
 
   const handlePaystack = async () => {
     if (!validateDelivery()) return
+
+    if (!PAYSTACK_PUBLIC_KEY?.startsWith('pk_')) {
+      toast.error('Payment is not configured. Please add a valid Paystack public key.')
+      return
+    }
+
+    if (!window.PaystackPop) {
+      toast.error('Payment gateway failed to load. Please refresh and try again.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -134,7 +144,7 @@ export default function CheckoutPage() {
       await supabase.from('order_items').insert(orderItems)
 
       const handler = window.PaystackPop.setup({
-        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        key: PAYSTACK_PUBLIC_KEY,
         email: form.email,
         amount: total * 100,
         ref: orderRef,
